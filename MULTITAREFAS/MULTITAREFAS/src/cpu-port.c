@@ -4,9 +4,10 @@
  * Author: Carlos H. Barriquello
  */ 
 
-#include <asf.h>
 #include "cpu-port.h"
 #include "multitarefas.h"
+
+extern uint32_t	   SP;
 
 stackptr_t CriaContexto(tarefa_t endereco_tarefa, stackptr_t ptr_pilha)
 {
@@ -14,7 +15,7 @@ stackptr_t CriaContexto(tarefa_t endereco_tarefa, stackptr_t ptr_pilha)
 	
 	uint32_t reg_val;
 	*(--ptr_pilha) = INITIAL_XPSR;     /* xPSR */
-	*(--ptr_pilha) = endereco_tarefa;  /* R15 */
+	*(--ptr_pilha) = (uint32_t)endereco_tarefa;  /* R15 */
 	*(--ptr_pilha) = 0x00;				   /* R14 */
 	
 	*(--ptr_pilha) = 0x12;			   /* R12 */
@@ -46,7 +47,7 @@ stackptr_t CriaContexto(tarefa_t endereco_tarefa, stackptr_t ptr_pilha)
 void ConfiguraMarcaTempo(void)
 {   
 	
-	    uint32_t cpu_clock_hz = system_cpu_clock_get_hz();
+                uint32_t cpu_clock_hz = cfg_CPU_CLOCK_HZ;
 		uint16_t valor_comparador = cpu_clock_hz/cfg_MARCA_TEMPO_HZ; //(cfg_CPU_CLOCK_HZ / cfg_MARCA_TEMPO_HZ);
 		
 		*(NVIC_SYSTICK_CTRL) = 0;						// Desabilita SysTick Timer
@@ -54,8 +55,8 @@ void ConfiguraMarcaTempo(void)
 		*(NVIC_SYSTICK_CTRL) = NVIC_SYSTICK_CLK | NVIC_SYSTICK_INT | NVIC_SYSTICK_ENABLE;  // Inicia
 }
 
-/* rotinas de interrup��o necess�rias */
-__attribute__ ((naked)) void SVC_Handler(void)
+/* rotinas de interrupção necessárias */
+__irq __attribute__ ((naked)) void SVC_Handler(void)
 {
 	/* Make PendSV and SysTick the lowest priority interrupts. */
 	*(NVIC_SYSPRI3) |= NVIC_PENDSV_PRI;
@@ -65,16 +66,17 @@ __attribute__ ((naked)) void SVC_Handler(void)
 	RESTAURA_ISR();
 }
 
-__attribute__ ((naked)) void PendSV_Handler(void)
+__irq __attribute__ ((naked)) void PendSV_Handler(void)
 {
 	
+
 	SALVA_ISR();
 	SALVA_CONTEXTO();
 	SALVA_SP(SP);
 	
 	Clear_PendSV();
 	
-    TrocaContextoDasTarefas();
+        TrocaContextoDasTarefas();
 	
 	RESTAURA_SP(SP);
 	RESTAURA_CONTEXTO();
@@ -84,14 +86,14 @@ __attribute__ ((naked)) void PendSV_Handler(void)
 
 /* Codigo dependente de hardware usado para 
    realizar a marca de tempo do sistema multitarefas - interrupcao */
-void SysTick_Handler(void)
+__irq void SysTick_Handler(void)
 {	
 	 
 	 ExecutaMarcaDeTempo();    
-	 TrocaContexto();   /* para o uso como sistema preemptivo */
+	 //TrocaContexto();   /* para o uso como sistema preemptivo */
 }
 
-void HardFault_Handler(void)
+__irq void HardFault_Handler(void)
 {
 	
 	while(1)
