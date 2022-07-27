@@ -38,19 +38,10 @@ void TaskAtuador(void *pvParameters);
 void setup() /// Função que executa quando liga a placa ou aperta o botão reset.
 {
 
-    lcd.init();      // inicializa LCD
-    lcd.backlight(); // acende backlight
-    lcd.clear();     // limpa a tela (caracteres)
+    lcd.init();      // Inicializa LCD
+    lcd.backlight(); // Acende backlight
+    lcd.clear();     // Limpa a tela (caracteres)
     //
-    lcd.setCursor(0, 0);      // endereça cursor
-    lcd.print("BOH ALMOCAR"); // escreve
-    lcd.setCursor(0, 1);
-    lcd.print("AS 13H");
-    lcd.setCursor(0, 2);
-    lcd.print("MEU AMOIZINHO?");
-    lcd.setCursor(0, 3);
-    lcd.print(" TI AMU METE BALA <3");
-
     pinMode(2, OUTPUT);
     pinMode(3, OUTPUT);
     pinMode(4, OUTPUT);
@@ -63,7 +54,7 @@ void setup() /// Função que executa quando liga a placa ou aperta o botão res
     {
         ; /// Espera a porta serial conectar.
     }
-    Serial.print("Iniciando rotina"); /// Confirma que a conexão foi estabelecida.(Debug)
+    Serial.print("Iniciando rotina"); /// Confirma que a conexão foi estabelecida.
 
     pinMode(pinBuzzer, OUTPUT);
 
@@ -71,7 +62,7 @@ void setup() /// Função que executa quando liga a placa ou aperta o botão res
     {                                               /// Checa se o semáforo da porta serial já não foi criado.
         xSerialSemaphore = xSemaphoreCreateMutex(); /// Cria a mutex que controla a porta serial.
         if ((xSerialSemaphore) != NULL)
-            xSemaphoreGive((xSerialSemaphore)); /// Torna a porta serial disponível, "dando" o semáforo.
+            xSemaphoreGive((xSerialSemaphore)); /// Torna a porta serial disponível.
     }
 
     /// Cria a fila de dados do sensor.
@@ -89,12 +80,12 @@ void setup() /// Função que executa quando liga a placa ou aperta o botão res
 
         xTaskCreate(TaskAtuador, "BuzzerTone", 128, NULL, 2, NULL); /// Cria a tarefa produtora de dados da fila.
     }
-    /// Agora, o escalonador de tarefas, que assume o controle do escalonamento de tarefas individuais, é iniciado automaticamente.*/
+    /// O escalonador de tarefas assume o controle do escalonamento de tarefas individuais.*/
 }
 
 void loop()
 {
-    /// Vazio. Tudo é feito nas tarefas.
+    /// Empty.
 }
 
 ///*--------------------------------------------------*/
@@ -113,7 +104,6 @@ void TaskAnalogRead(void *pvParameters __attribute__((unused))) /// Tarefa que l
 
         /// Posta um item na fila.
         /// https://www.freertos.org/a00117.html
-
         xQueueSend(structQueue, &currentPinRead, portMAX_DELAY);
         vTaskDelay(1); /// Um tick de atraso (15ms) entre as leituras para estabilidade.
     }
@@ -146,7 +136,7 @@ void TaskTempAtual(void *pvParameters __attribute__((unused))) /// Tarefa que co
             }
             else
             {             /// Caso o contador atinja 10,
-                i = 0;    /// reseta a variável de controle do buzzer para evitar leitura do buffer.
+                i = 0;    /// Reseta a variável de controle do buzzer para evitar leitura do buffer.
                 flag = 1; /// Altera a flag e sinaliza que a média pode ser calculada.
             }
         }
